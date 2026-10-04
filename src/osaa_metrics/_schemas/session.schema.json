@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "session-schema://osaa-metrics/v1",
+  "title": "osaa-metrics session",
+  "type": "object",
+  "required": ["schema_version", "generated_at", "schema", "queries"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"type": "string", "const": "1"},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "schema": {
+      "type": "array",
+      "maxItems": 100,
+      "items": {
+        "type": "object",
+        "required": ["code", "description", "var_name"],
+        "additionalProperties": false,
+        "properties": {
+          "code": {"type": "string", "minLength": 1},
+          "description": {"type": "string"},
+          "var_name": {"type": "string", "pattern": "^[a-z_][a-z0-9_]*$"}
+        }
+      }
+    },
+    "yaml": {"type": ["string", "null"]},
+    "queries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "created_at", "query_args", "chart_spec"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {"type": "string", "pattern": "^q-\\d{3,}$"},
+          "label": {"type": ["string", "null"]},
+          "created_at": {"type": "string", "format": "date-time"},
+          "query_args": {"type": "object"},
+          "chart_spec": {"type": "object"},
+          "sql": {"type": ["string", "null"]}
+        }
+      }
+    }
+  }
+}

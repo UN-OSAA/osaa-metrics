@@ -1,0 +1,21 @@
+code,description,var_name
+NV.AGR.TOTL.ZS,"Agriculture, value added (% of GDP)",agriculture_va
+NV.IND.TOTL.ZS,"Industry, value added (% of GDP)",industry_va
+NV.IND.MANF.ZS,"Manufacturing, value added (% of GDP)",manufacturing_va
+NV.SRV.TOTL.ZS,"Services, value added (% of GDP)",services_va
+SL.GDP.PCAP.EM.KD,GDP per person employed (constant 2011 PPP $),output_per_worker
+NV.AGR.EMPL.KD,"Agriculture, value added per worker (constant 2010 US$)",agriculture_va_per_worker
+NV.IND.EMPL.KD,"Industry, value added per worker (constant 2010 US$)",industry_va_per_worker
+NV.SRV.EMPL.KD,"Services, value added per worker (constant 2010 US$)",services_va_per_worker
+SL.UEM.TOTL.ZS,"Unemployment, total (% of total labor force) (modeled ILO estimate)",unemployment_rate
+NE.GDI.TOTL.ZS,Gross capital formation (% of GDP),investment_pct_gdp
+NY.GNS.ICTR.ZS,Gross savings (% of GDP),savings_pct_gdp
+BX.KLT.DINV.WD.GD.ZS,"Foreign direct investment, net inflows (% of GDP)",fdi_pct_gdp
+BX.TRF.PWKR.DT.GD.ZS,"Personal remittances, received (% of GDP)",remittances_pct_gdp
+BN.CAB.XOKA.GD.ZS,Current account balance (% of GDP),current_account_pct_gdp
+TT.PRI.MRCH.XD.WD,Net barter terms of trade index (2000 = 100),terms_of_trade_idx
+NE.EXP.GNFS.ZS,Exports of goods and services (% of GDP),exports_pct_gdp
+NE.IMP.GNFS.ZS,Imports of goods and services (% of GDP),imports_pct_gdp
+NY.GDP.MKTP.CD,GDP (current US$),gdp_current_usd
+NY.GNP.PCAP.CD,"GNI per capita, Atlas method (current US$)",gni_per_capita
+SP.POP.TOTL,"Population, total",population

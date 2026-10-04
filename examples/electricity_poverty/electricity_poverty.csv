@@ -1,0 +1,8 @@
+code,description,var_name
+EG.ELC.ACCS.ZS,Access to electricity (% of population),electricity_access
+EG.ELC.ACCS.RU.ZS,"Access to electricity, rural (% of rural population)",electricity_access_rural
+EG.ELC.ACCS.UR.ZS,"Access to electricity, urban (% of urban population)",electricity_access_urban
+SI.POV.DDAY,Poverty headcount ratio at the international poverty line (% of population),poverty_headcount
+NY.GDP.PCAP.PP.KD,"GDP per capita, PPP (constant 2021 international $)",gdp_per_capita_ppp
+SE.PRM.ENRR,"School enrollment, primary (% gross)",primary_enrolment
+SP.RUR.TOTL.ZS,Rural population (% of total population),rural_population

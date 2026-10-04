@@ -1,0 +1,461 @@
+{
+  "schema_version": "1",
+  "generated_at": "2026-06-02T20:48:57+00:00",
+  "schema": [
+    {
+      "code": "NV.AGR.TOTL.ZS",
+      "description": "Agriculture, value added (% of GDP)",
+      "var_name": "agriculture_va"
+    },
+    {
+      "code": "NV.IND.TOTL.ZS",
+      "description": "Industry, value added (% of GDP)",
+      "var_name": "industry_va"
+    },
+    {
+      "code": "NV.IND.MANF.ZS",
+      "description": "Manufacturing, value added (% of GDP)",
+      "var_name": "manufacturing_va"
+    },
+    {
+      "code": "NV.SRV.TOTL.ZS",
+      "description": "Services, value added (% of GDP)",
+      "var_name": "services_va"
+    },
+    {
+      "code": "SL.GDP.PCAP.EM.KD",
+      "description": "GDP per person employed (constant 2011 PPP $)",
+      "var_name": "output_per_worker"
+    },
+    {
+      "code": "NV.AGR.EMPL.KD",
+      "description": "Agriculture, value added per worker (constant 2010 US$)",
+      "var_name": "agriculture_va_per_worker"
+    },
+    {
+      "code": "NV.IND.EMPL.KD",
+      "description": "Industry, value added per worker (constant 2010 US$)",
+      "var_name": "industry_va_per_worker"
+    },
+    {
+      "code": "NV.SRV.EMPL.KD",
+      "description": "Services, value added per worker (constant 2010 US$)",
+      "var_name": "services_va_per_worker"
+    },
+    {
+      "code": "SL.UEM.TOTL.ZS",
+      "description": "Unemployment, total (% of total labor force) (modeled ILO estimate)",
+      "var_name": "unemployment_rate"
+    },
+    {
+      "code": "NE.GDI.TOTL.ZS",
+      "description": "Gross capital formation (% of GDP)",
+      "var_name": "investment_pct_gdp"
+    },
+    {
+      "code": "NY.GNS.ICTR.ZS",
+      "description": "Gross savings (% of GDP)",
+      "var_name": "savings_pct_gdp"
+    },
+    {
+      "code": "BX.KLT.DINV.WD.GD.ZS",
+      "description": "Foreign direct investment, net inflows (% of GDP)",
+      "var_name": "fdi_pct_gdp"
+    },
+    {
+      "code": "BX.TRF.PWKR.DT.GD.ZS",
+      "description": "Personal remittances, received (% of GDP)",
+      "var_name": "remittances_pct_gdp"
+    },
+    {
+      "code": "BN.CAB.XOKA.GD.ZS",
+      "description": "Current account balance (% of GDP)",
+      "var_name": "current_account_pct_gdp"
+    },
+    {
+      "code": "TT.PRI.MRCH.XD.WD",
+      "description": "Net barter terms of trade index (2000 = 100)",
+      "var_name": "terms_of_trade_idx"
+    },
+    {
+      "code": "NE.EXP.GNFS.ZS",
+      "description": "Exports of goods and services (% of GDP)",
+      "var_name": "exports_pct_gdp"
+    },
+    {
+      "code": "NE.IMP.GNFS.ZS",
+      "description": "Imports of goods and services (% of GDP)",
+      "var_name": "imports_pct_gdp"
+    },
+    {
+      "code": "NY.GDP.MKTP.CD",
+      "description": "GDP (current US$)",
+      "var_name": "gdp_current_usd"
+    },
+    {
+      "code": "NY.GNP.PCAP.CD",
+      "description": "GNI per capita, Atlas method (current US$)",
+      "var_name": "gni_per_capita"
+    },
+    {
+      "code": "SP.POP.TOTL",
+      "description": "Population, total",
+      "var_name": "population"
+    }
+  ],
+  "yaml": "wdi_economy:\n  table: core_tbl\n  description: WDI economy indicators for Africa-focused policy analysis.\n  dimensions:\n    year:\n      expr: _.year\n      description: Year\n    country:\n      expr: _.country\n      description: Country\n    iso3:\n      expr: _.iso3\n      description: ISO3 code\n    region:\n      expr: _.region\n      description: Region\n    subregion:\n      expr: _.subregion\n      description: Subregion\n    income_group:\n      expr: _.income_group\n      description: World Bank income group\n    is_ldc:\n      expr: _.is_ldc\n      description: Least-developed country flag\n  measures:\n    avg_agriculture_va:\n      expr: \"_.agriculture_va.mean()\"\n      description: Agriculture value added (% of GDP)\n    avg_industry_va:\n      expr: \"_.industry_va.mean()\"\n      description: Industry value added (% of GDP)\n    avg_manufacturing_va:\n      expr: \"_.manufacturing_va.mean()\"\n      description: Manufacturing value added (% of GDP)\n    avg_services_va:\n      expr: \"_.services_va.mean()\"\n      description: Services value added (% of GDP)\n    avg_output_per_worker:\n      expr: \"_.output_per_worker.mean()\"\n      description: Output per worker (constant 2011 PPP $)\n    avg_agr_va_per_worker:\n      expr: \"_.agriculture_va_per_worker.mean()\"\n      description: Agriculture VA per worker (constant 2010 US$)\n    avg_ind_va_per_worker:\n      expr: \"_.industry_va_per_worker.mean()\"\n      description: Industry VA per worker (constant 2010 US$)\n    avg_srv_va_per_worker:\n      expr: \"_.services_va_per_worker.mean()\"\n      description: Services VA per worker (constant 2010 US$)\n    avg_unemployment:\n      expr: \"_.unemployment_rate.mean()\"\n      description: Unemployment rate (% of labour force)\n    avg_investment:\n      expr: \"_.investment_pct_gdp.mean()\"\n      description: Gross capital formation (% of GDP)\n    avg_savings:\n      expr: \"_.savings_pct_gdp.mean()\"\n      description: Gross savings (% of GDP)\n    financing_gap:\n      expr: \"_.investment_pct_gdp.mean() - _.savings_pct_gdp.mean()\"\n      description: Financing gap (investment less savings, % of GDP)\n    avg_fdi:\n      expr: \"_.fdi_pct_gdp.mean()\"\n      description: FDI net inflows (% of GDP)\n    avg_remittances:\n      expr: \"_.remittances_pct_gdp.mean()\"\n      description: Personal remittances (% of GDP)\n    avg_current_account:\n      expr: \"_.current_account_pct_gdp.mean()\"\n      description: Current account balance (% of GDP)\n    avg_terms_of_trade:\n      expr: \"_.terms_of_trade_idx.mean()\"\n      description: Net barter terms of trade (2000 = 100)\n    avg_exports:\n      expr: \"_.exports_pct_gdp.mean()\"\n      description: Exports (% of GDP)\n    avg_imports:\n      expr: \"_.imports_pct_gdp.mean()\"\n      description: Imports (% of GDP)\n    total_gdp:\n      expr: \"_.gdp_current_usd.sum()\"\n      description: Total GDP (current US$)\n    avg_gni_per_capita:\n      expr: \"_.gni_per_capita.mean()\"\n      description: Avg GNI per capita, Atlas method (current US$)\n    total_population:\n      expr: \"_.population.sum()\"\n      description: Total population\n    country_count:\n      expr: \"_.iso3.nunique()\"\n      description: Number of distinct countries\n",
+  "queries": [
+    {
+      "id": "q-001",
+      "label": "The lopsided shift",
+      "created_at": "2026-06-02T20:48:57+00:00",
+      "query_args": {
+        "dimensions": [
+          "year"
+        ],
+        "measures": [
+          "avg_agriculture_va",
+          "avg_industry_va",
+          "avg_manufacturing_va",
+          "avg_services_va"
+        ],
+        "filters": [
+          {
+            "field": "region",
+            "operator": "=",
+            "value": "Africa"
+          }
+        ],
+        "order_by": [
+          [
+            "year",
+            "asc"
+          ]
+        ],
+        "limit": null
+      },
+      "chart_spec": {
+        "title": "Africa - sectoral value added, 2000-2023",
+        "mark": {
+          "type": "line",
+          "point": true
+        },
+        "transform": [
+          {
+            "fold": [
+              "avg_agriculture_va",
+              "avg_industry_va",
+              "avg_manufacturing_va",
+              "avg_services_va"
+            ],
+            "as": [
+              "series",
+              "value"
+            ]
+          }
+        ],
+        "encoding": {
+          "x": {
+            "field": "year",
+            "type": "ordinal",
+            "title": "Year"
+          },
+          "y": {
+            "field": "value",
+            "type": "quantitative",
+            "title": "Value added (% of GDP)"
+          },
+          "color": {
+            "field": "series",
+            "type": "nominal",
+            "title": "Series"
+          }
+        }
+      },
+      "sql": "SELECT\n  *\nFROM (\n  SELECT\n    \"t1\".\"year\",\n    AVG(\"t1\".\"agriculture_va\") AS \"avg_agriculture_va\",\n    AVG(\"t1\".\"industry_va\") AS \"avg_industry_va\",\n    AVG(\"t1\".\"manufacturing_va\") AS \"avg_manufacturing_va\",\n    AVG(\"t1\".\"services_va\") AS \"avg_services_va\"\n  FROM (\n    SELECT\n      *\n    FROM \"core\" AS \"t0\"\n    WHERE\n      \"t0\".\"region\" = 'Africa'\n  ) AS \"t1\"\n  GROUP BY\n    1\n) AS \"t2\"\nORDER BY\n  \"t2\".\"year\" ASC"
+    },
+    {
+      "id": "q-002",
+      "label": "The productivity it skips",
+      "created_at": "2026-06-02T20:48:57+00:00",
+      "query_args": {
+        "dimensions": [
+          "year"
+        ],
+        "measures": [
+          "avg_agr_va_per_worker",
+          "avg_ind_va_per_worker",
+          "avg_srv_va_per_worker"
+        ],
+        "filters": [
+          {
+            "field": "region",
+            "operator": "=",
+            "value": "Africa"
+          }
+        ],
+        "order_by": [
+          [
+            "year",
+            "asc"
+          ]
+        ],
+        "limit": null
+      },
+      "chart_spec": {
+        "title": "Africa - sectoral labour productivity, 2000-2023",
+        "mark": {
+          "type": "line",
+          "point": true
+        },
+        "transform": [
+          {
+            "fold": [
+              "avg_agr_va_per_worker",
+              "avg_ind_va_per_worker",
+              "avg_srv_va_per_worker"
+            ],
+            "as": [
+              "series",
+              "value"
+            ]
+          }
+        ],
+        "encoding": {
+          "x": {
+            "field": "year",
+            "type": "ordinal",
+            "title": "Year"
+          },
+          "y": {
+            "field": "value",
+            "type": "quantitative",
+            "title": "Value added per worker (2010 US$)"
+          },
+          "color": {
+            "field": "series",
+            "type": "nominal",
+            "title": "Series"
+          }
+        }
+      },
+      "sql": "SELECT\n  *\nFROM (\n  SELECT\n    \"t1\".\"year\",\n    AVG(\"t1\".\"agriculture_va_per_worker\") AS \"avg_agr_va_per_worker\",\n    AVG(\"t1\".\"industry_va_per_worker\") AS \"avg_ind_va_per_worker\",\n    AVG(\"t1\".\"services_va_per_worker\") AS \"avg_srv_va_per_worker\"\n  FROM (\n    SELECT\n      *\n    FROM \"core\" AS \"t0\"\n    WHERE\n      \"t0\".\"region\" = 'Africa'\n  ) AS \"t1\"\n  GROUP BY\n    1\n) AS \"t2\"\nORDER BY\n  \"t2\".\"year\" ASC"
+    },
+    {
+      "id": "q-003",
+      "label": "Investment rose, saving didn't",
+      "created_at": "2026-06-02T20:48:57+00:00",
+      "query_args": {
+        "dimensions": [
+          "year"
+        ],
+        "measures": [
+          "avg_investment",
+          "avg_savings"
+        ],
+        "filters": [
+          {
+            "field": "region",
+            "operator": "=",
+            "value": "Africa"
+          }
+        ],
+        "order_by": [
+          [
+            "year",
+            "asc"
+          ]
+        ],
+        "limit": null
+      },
+      "chart_spec": {
+        "title": "Africa - investment vs savings (the wedge is the financing gap)",
+        "mark": {
+          "type": "line",
+          "point": true
+        },
+        "transform": [
+          {
+            "fold": [
+              "avg_investment",
+              "avg_savings"
+            ],
+            "as": [
+              "series",
+              "value"
+            ]
+          }
+        ],
+        "encoding": {
+          "x": {
+            "field": "year",
+            "type": "ordinal",
+            "title": "Year"
+          },
+          "y": {
+            "field": "value",
+            "type": "quantitative",
+            "title": "% of GDP"
+          },
+          "color": {
+            "field": "series",
+            "type": "nominal",
+            "title": "Series"
+          }
+        }
+      },
+      "sql": "SELECT\n  *\nFROM (\n  SELECT\n    \"t1\".\"year\",\n    AVG(\"t1\".\"investment_pct_gdp\") AS \"avg_investment\",\n    AVG(\"t1\".\"savings_pct_gdp\") AS \"avg_savings\"\n  FROM (\n    SELECT\n      *\n    FROM \"core\" AS \"t0\"\n    WHERE\n      \"t0\".\"region\" = 'Africa'\n  ) AS \"t1\"\n  GROUP BY\n    1\n) AS \"t2\"\nORDER BY\n  \"t2\".\"year\" ASC"
+    },
+    {
+      "id": "q-004",
+      "label": "Remittances overtake FDI",
+      "created_at": "2026-06-02T20:48:57+00:00",
+      "query_args": {
+        "dimensions": [
+          "year"
+        ],
+        "measures": [
+          "avg_fdi",
+          "avg_remittances"
+        ],
+        "filters": [
+          {
+            "field": "region",
+            "operator": "=",
+            "value": "Africa"
+          }
+        ],
+        "order_by": [
+          [
+            "year",
+            "asc"
+          ]
+        ],
+        "limit": null
+      },
+      "chart_spec": {
+        "title": "Africa - external development finance: FDI vs remittances",
+        "mark": {
+          "type": "line",
+          "point": true
+        },
+        "transform": [
+          {
+            "fold": [
+              "avg_fdi",
+              "avg_remittances"
+            ],
+            "as": [
+              "series",
+              "value"
+            ]
+          }
+        ],
+        "encoding": {
+          "x": {
+            "field": "year",
+            "type": "ordinal",
+            "title": "Year"
+          },
+          "y": {
+            "field": "value",
+            "type": "quantitative",
+            "title": "% of GDP"
+          },
+          "color": {
+            "field": "series",
+            "type": "nominal",
+            "title": "Series"
+          }
+        }
+      },
+      "sql": "SELECT\n  *\nFROM (\n  SELECT\n    \"t1\".\"year\",\n    AVG(\"t1\".\"fdi_pct_gdp\") AS \"avg_fdi\",\n    AVG(\"t1\".\"remittances_pct_gdp\") AS \"avg_remittances\"\n  FROM (\n    SELECT\n      *\n    FROM \"core\" AS \"t0\"\n    WHERE\n      \"t0\".\"region\" = 'Africa'\n  ) AS \"t1\"\n  GROUP BY\n    1\n) AS \"t2\"\nORDER BY\n  \"t2\".\"year\" ASC"
+    },
+    {
+      "id": "q-005",
+      "label": "The commodity rollercoaster",
+      "created_at": "2026-06-02T20:48:57+00:00",
+      "query_args": {
+        "dimensions": [
+          "year"
+        ],
+        "measures": [
+          "avg_terms_of_trade"
+        ],
+        "filters": [
+          {
+            "field": "region",
+            "operator": "=",
+            "value": "Africa"
+          }
+        ],
+        "order_by": [
+          [
+            "year",
+            "asc"
+          ]
+        ],
+        "limit": null
+      },
+      "chart_spec": {
+        "title": "Africa - net barter terms of trade, 2000-2021",
+        "mark": {
+          "type": "line",
+          "point": true
+        },
+        "encoding": {
+          "x": {
+            "field": "year",
+            "type": "ordinal",
+            "title": "Year"
+          },
+          "y": {
+            "field": "avg_terms_of_trade",
+            "type": "quantitative",
+            "title": "Terms of trade (2000 = 100)",
+            "scale": {
+              "zero": false
+            }
+          }
+        }
+      },
+      "sql": "SELECT\n  *\nFROM (\n  SELECT\n    \"t1\".\"year\",\n    AVG(\"t1\".\"terms_of_trade_idx\") AS \"avg_terms_of_trade\"\n  FROM (\n    SELECT\n      *\n    FROM \"core\" AS \"t0\"\n    WHERE\n      \"t0\".\"region\" = 'Africa'\n  ) AS \"t1\"\n  GROUP BY\n    1\n) AS \"t2\"\nORDER BY\n  \"t2\".\"year\" ASC"
+    },
+    {
+      "id": "q-006",
+      "label": "The cumulative outcome",
+      "created_at": "2026-06-02T20:48:57+00:00",
+      "query_args": {
+        "dimensions": [
+          "region"
+        ],
+        "measures": [
+          "avg_output_per_worker"
+        ],
+        "filters": [],
+        "order_by": null,
+        "limit": null
+      },
+      "chart_spec": {
+        "title": "Output per worker by region",
+        "mark": {
+          "type": "bar"
+        },
+        "encoding": {
+          "y": {
+            "field": "region",
+            "type": "nominal",
+            "sort": "-x",
+            "title": null
+          },
+          "x": {
+            "field": "avg_output_per_worker",
+            "type": "quantitative",
+            "title": "Output per worker (constant 2011 PPP $)"
+          }
+        }
+      },
+      "sql": "SELECT\n  *\nFROM (\n  SELECT\n    \"t1\".\"region\",\n    AVG(\"t1\".\"output_per_worker\") AS \"avg_output_per_worker\"\n  FROM (\n    SELECT\n      *\n    FROM \"core\" AS \"t0\"\n  ) AS \"t1\"\n  GROUP BY\n    1\n) AS \"t2\""
+    }
+  ]
+}

@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "schema://osaa-metrics/bsl_model.schema.json",
+  "title": "osaa-metrics BSL semantic-model",
+  "description": "Shape of a Boring Semantic Layer (BSL 0.3.16) YAML for the osaa-metrics pair-analyst MCP. The YAML is parsed to a dict and validated against this schema before BSL's from_config() is invoked. A successful schema check does NOT guarantee the model loads — expression safety and column references in `expr:` strings are checked at runtime by BSL's safe-eval and the server (Phase B/C). This schema covers the structural rules: required fields, allowed shapes, and identifier naming.",
+  "type": "object",
+  "minProperties": 1,
+  "maxProperties": 1,
+  "additionalProperties": {
+    "$ref": "#/$defs/model"
+  },
+  "$defs": {
+    "model": {
+      "type": "object",
+      "description": "A single BSL semantic-model definition. The top-level key (model name) is the model's identifier; the value is this object.",
+      "required": ["table"],
+      "additionalProperties": false,
+      "properties": {
+        "table": {
+          "type": "string",
+          "const": "core_tbl",
+          "description": "Must be the literal string 'core_tbl' — the materialized DuckDB wide table built by save_core_schema + build_core_table. Any other value will fail BSL's from_config()."
+        },
+        "description": {
+          "type": "string",
+          "description": "Optional human-readable description of the model. Surfaced in summaries to the user."
+        },
+        "dimensions": {
+          "type": "object",
+          "description": "Map of dimension name → expression. Names must be unique snake-case identifiers. Each value is either a short-form expression string (e.g. `_.region`) or a long-form object with `expr` and optional `description`. Long-form descriptions surface as chart axis labels.",
+          "additionalProperties": {
+            "$ref": "#/$defs/dimension"
+          },
+          "propertyNames": {
+            "$ref": "#/$defs/identifier"
+          }
+        },
+        "measures": {
+          "type": "object",
+          "description": "Map of measure name → aggregation expression. Names must be unique snake-case identifiers. Each value is either a short-form expression string (e.g. `_.gdp.sum()`) or a long-form object with `expr` and optional `description`. Long-form descriptions surface as chart axis labels.",
+          "additionalProperties": {
+            "$ref": "#/$defs/measure"
+          },
+          "propertyNames": {
+            "$ref": "#/$defs/identifier"
+          }
+        }
+      }
+    },
+    "dimension": {
+      "description": "Dimension entry: short-form (string) or long-form (object). Short-form is just the expression. Long-form lets you attach a description (used as chart axis labels) and dimension flags.",
+      "oneOf": [
+        { "$ref": "#/$defs/expression" },
+        {
+          "type": "object",
+          "required": ["expr"],
+          "additionalProperties": false,
+          "properties": {
+            "expr": { "$ref": "#/$defs/expression" },
+            "description": { "type": "string" },
+            "is_entity": { "type": "boolean" },
+            "is_event_timestamp": { "type": "boolean" },
+            "is_time_dimension": { "type": "boolean" },
+            "smallest_time_grain": { "type": "string" },
+            "derived_dimensions": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        }
+      ]
+    },
+    "measure": {
+      "description": "Measure entry: short-form (string) or long-form (object). Short-form is just the expression (e.g. `_.gdp.sum()`). Long-form lets you attach a description.",
+      "oneOf": [
+        { "$ref": "#/$defs/expression" },
+        {
+          "type": "object",
+          "required": ["expr"],
+          "additionalProperties": false,
+          "properties": {
+            "expr": { "$ref": "#/$defs/expression" },
+            "description": { "type": "string" }
+          }
+        }
+      ]
+    },
+    "expression": {
+      "type": "string",
+      "minLength": 1,
+      "description": "A BSL `_`-expression: attribute access on the deferred placeholder (`_.field`), operators, and method calls (e.g. `_.gdp.sum()`, `_.exports.mean() - _.imports.mean()`). Expression safety is enforced by BSL 0.3.16's safe-eval at load time, which parses each expression and validates it against its own positive AST allowlist — private names/attributes, backend access, IO, and arbitrary calls are rejected there. This schema only checks that the value is a non-empty string."
+    },
+    "identifier": {
+      "type": "string",
+      "pattern": "^[a-z_][a-z0-9_]*$",
+      "description": "Snake-case identifier: starts with a lowercase letter or underscore, followed by lowercase letters, digits, or underscores. Same rule as core-table var_names."
+    }
+  }
+}

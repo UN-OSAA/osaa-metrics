@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          python-version: "3.13"
+          enable-cache: true
+
+      - uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4.0.0
+
+      - name: Install
+        run: uv sync --extra dev --extra mcp --frozen
+
+      - name: Lint
+        run: uv run ruff check .
+
+      - name: Format check
+        run: uv run ruff format --check .
+
+      - name: Tests
+        env:
+          OSAA_SKIP_NET: "1"
+        run: |
+          set -o pipefail
+          uv run pytest -q | tee pytest.out
+
+      - name: Assert skip reasons
+        # Every skip must carry one of the two sanctioned reasons (offline run,
+        # no data mirror), and both classes must be present — an absent class
+        # means gated tests silently ran. Per-class counts go to the run
+        # summary for drift-watching; growth within a class is not enforced.
+        run: |
+          NET='network-backed test skipped via OSAA_SKIP_NET=1'
+          DATA='no local parquet mirror'
+          net_n=$(grep '^SKIPPED' pytest.out | grep -cF "$NET") || true
+          data_n=$(grep '^SKIPPED' pytest.out | grep -cF "$DATA") || true
+          echo "skips: ${net_n} network-gated, ${data_n} data-gated" | tee -a "$GITHUB_STEP_SUMMARY"
+          bad=$(grep '^SKIPPED' pytest.out | grep -vF -e "$NET" -e "$DATA" || true)
+          if [ -n "$bad" ]; then
+            echo "FAIL: tests skipped for an unexpected reason:"
+            echo "$bad"
+            exit 1
+          fi
+          [ "$net_n" -gt 0 ] || { echo "FAIL: no network-gated skips — is OSAA_SKIP_NET set on the Tests step?"; exit 1; }
+          [ "$data_n" -gt 0 ] || { echo "FAIL: no data-gated skips — did the CI checkout gain a data mirror?"; exit 1; }

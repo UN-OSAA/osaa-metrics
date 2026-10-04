@@ -1,0 +1,92 @@
+wdi_economy:
+  table: core_tbl
+  description: WDI economy indicators for Africa-focused policy analysis.
+  dimensions:
+    year:
+      expr: _.year
+      description: Year
+    country:
+      expr: _.country
+      description: Country
+    iso3:
+      expr: _.iso3
+      description: ISO3 code
+    region:
+      expr: _.region
+      description: Region
+    subregion:
+      expr: _.subregion
+      description: Subregion
+    income_group:
+      expr: _.income_group
+      description: World Bank income group
+    is_ldc:
+      expr: _.is_ldc
+      description: Least-developed country flag
+  measures:
+    avg_agriculture_va:
+      expr: "_.agriculture_va.mean()"
+      description: Agriculture value added (% of GDP)
+    avg_industry_va:
+      expr: "_.industry_va.mean()"
+      description: Industry value added (% of GDP)
+    avg_manufacturing_va:
+      expr: "_.manufacturing_va.mean()"
+      description: Manufacturing value added (% of GDP)
+    avg_services_va:
+      expr: "_.services_va.mean()"
+      description: Services value added (% of GDP)
+    avg_output_per_worker:
+      expr: "_.output_per_worker.mean()"
+      description: Output per worker (constant 2011 PPP $)
+    avg_agr_va_per_worker:
+      expr: "_.agriculture_va_per_worker.mean()"
+      description: Agriculture VA per worker (constant 2010 US$)
+    avg_ind_va_per_worker:
+      expr: "_.industry_va_per_worker.mean()"
+      description: Industry VA per worker (constant 2010 US$)
+    avg_srv_va_per_worker:
+      expr: "_.services_va_per_worker.mean()"
+      description: Services VA per worker (constant 2010 US$)
+    avg_unemployment:
+      expr: "_.unemployment_rate.mean()"
+      description: Unemployment rate (% of labour force)
+    avg_investment:
+      expr: "_.investment_pct_gdp.mean()"
+      description: Gross capital formation (% of GDP)
+    avg_savings:
+      expr: "_.savings_pct_gdp.mean()"
+      description: Gross savings (% of GDP)
+    financing_gap:
+      expr: "_.investment_pct_gdp.mean() - _.savings_pct_gdp.mean()"
+      description: Financing gap (investment less savings, % of GDP)
+    avg_fdi:
+      expr: "_.fdi_pct_gdp.mean()"
+      description: FDI net inflows (% of GDP)
+    avg_remittances:
+      expr: "_.remittances_pct_gdp.mean()"
+      description: Personal remittances (% of GDP)
+    avg_current_account:
+      expr: "_.current_account_pct_gdp.mean()"
+      description: Current account balance (% of GDP)
+    avg_terms_of_trade:
+      expr: "_.terms_of_trade_idx.mean()"
+      description: Net barter terms of trade (2000 = 100)
+    avg_exports:
+      expr: "_.exports_pct_gdp.mean()"
+      description: Exports (% of GDP)
+    avg_imports:
+      expr: "_.imports_pct_gdp.mean()"
+      description: Imports (% of GDP)
+    total_gdp:
+      expr: "_.gdp_current_usd.sum()"
+      description: Total GDP (current US$)
+    avg_gni_per_capita:
+      expr: "_.gni_per_capita.mean()"
+      description: Avg GNI per capita, Atlas method (current US$)
+    total_population:
+      expr: "_.population.sum()"
+      description: Total population
+    country_count:
+      expr: "_.iso3.nunique()"
+      description: Number of distinct countries

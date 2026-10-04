@@ -1,0 +1,4 @@
+code,description,var_name
+NY.GDP.MKTP.CD,GDP (current US$),gdp_usd
+NY.GDP.MKTP.KD.ZG,GDP growth (annual %),gdp_growth
+SP.POP.TOTL,Population total,pop_total

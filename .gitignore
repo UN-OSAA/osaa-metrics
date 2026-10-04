@@ -1,0 +1,35 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Data
+pipeline.db
+pipeline.db.*
+data/*
+!data/.gitkeep
+*.parquet
+
+# Secrets
+.env
+
+# Hand-built claude.ai skill upload artifacts (never commit the binaries)
+skills/*.zip
+
+# OS
+.DS_Store
+
+# Claude Code per-user settings
+.claude/settings.local.json
+
+# Cloudflare CLI local state
+.wrangler/
+
+# Editor state
+.vscode/

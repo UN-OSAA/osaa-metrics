@@ -1,0 +1,13 @@
+{
+  "config": {
+    "view": {"continuousWidth": 400, "continuousHeight": 300},
+    "axis": {"labelFontSize": 11, "titleFontSize": 12},
+    "title": {
+      "anchor": "start",
+      "fontSize": 14,
+      "subtitleFontSize": 12,
+      "subtitleColor": "#555555",
+      "offset": 10
+    }
+  }
+}

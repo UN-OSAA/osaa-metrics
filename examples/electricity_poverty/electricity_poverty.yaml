@@ -1,0 +1,44 @@
+electricity_poverty:
+  table: core_tbl
+  description: Electricity access, poverty and income, by country and year.
+  dimensions:
+    year:
+      expr: _.year
+      description: Year
+    country:
+      expr: _.country
+      description: Country
+    iso3:
+      expr: _.iso3
+      description: ISO3 code
+    region:
+      expr: _.region
+      description: Region
+    subregion:
+      expr: _.subregion
+      description: Subregion
+    income_group:
+      expr: _.income_group
+      description: World Bank income group
+  measures:
+    avg_electricity_access:
+      expr: "_.electricity_access.mean()"
+      description: Access to electricity (% of population)
+    avg_electricity_access_rural:
+      expr: "_.electricity_access_rural.mean()"
+      description: Access to electricity, rural (% of rural population)
+    avg_electricity_access_urban:
+      expr: "_.electricity_access_urban.mean()"
+      description: Access to electricity, urban (% of urban population)
+    avg_poverty_headcount:
+      expr: "_.poverty_headcount.mean()"
+      description: Poverty headcount ratio at the international poverty line (% of population)
+    avg_gdp_per_capita_ppp:
+      expr: "_.gdp_per_capita_ppp.mean()"
+      description: GDP per capita, PPP (constant 2021 international $)
+    avg_primary_enrolment:
+      expr: "_.primary_enrolment.mean()"
+      description: School enrollment, primary (% gross)
+    avg_rural_population:
+      expr: "_.rural_population.mean()"
+      description: Rural population (% of total population)

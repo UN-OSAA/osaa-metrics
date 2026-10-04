@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>osaa-metrics · Core summary</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; padding: 12px; }
+    h2 { margin: 0 0 8px; font-size: 14px; }
+    .shape { font-size: 13px; color: #1e3a8a; font-weight: 600; margin-bottom: 8px; }
+    .empty { color: #888; font-size: 12px; }
+    .err { color: #c00; font-size: 12px; }
+    table { border-collapse: collapse; font-size: 11px; font-variant-numeric: tabular-nums;
+            font-family: ui-monospace, monospace; }
+    th, td { padding: 3px 8px; border-bottom: 1px solid #eee; text-align: left; white-space: nowrap; }
+    th { background: #f7f7f7; font-weight: 600; }
+    td.num { text-align: right; }
+    .scroll { overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <h2>Core table — summary</h2>
+  <div id="shape" class="shape"></div>
+  <div class="scroll" id="body"><div class="empty">waiting for build_core_summary…</div></div>
+
+  <script type="module">
+    import { App } from "https://unpkg.com/@modelcontextprotocol/ext-apps@1.7.1/app-with-deps";
+    import { parseToolResult, escapeHtml } from "./shared.js";
+
+    const NUMERIC_COLS = new Set([
+      "min", "max", "approx_unique",
+      "avg", "std", "q25", "q50", "q75",
+      "count", "null_percentage",
+    ]);
+
+    /**
+     * Parse a pipe-table — header line, separator, body — into {headers, rows}.
+     * Returns null if the input doesn't match.
+     */
+    function parsePipeTable(lines) {
+      if (lines.length < 2) return null;
+      const split = (line) => line.replace(/^\|/, "").replace(/\|$/, "").split("|").map((c) => c.trim());
+      const headers = split(lines[0]);
+      const sep = lines[1];
+      if (!/^\|[\s|:-]+\|?$/.test(sep) && !/^[\s|:-]+$/.test(sep)) return null;
+      const rows = lines.slice(2).map(split);
+      return { headers, rows };
+    }
+
+    function renderTable(headers, rows) {
+      const head = "<tr>" + headers.map((h) => `<th>${escapeHtml(h)}</th>`).join("") + "</tr>";
+      const body = rows.map((row) => {
+        return "<tr>" + row.map((cell, i) => {
+          const cls = NUMERIC_COLS.has(headers[i]) ? "num" : "";
+          return `<td class="${cls}">${escapeHtml(cell)}</td>`;
+        }).join("") + "</tr>";
+      }).join("");
+      return `<table><thead>${head}</thead><tbody>${body}</tbody></table>`;
+    }
+
+    function renderMarkdown(md) {
+      // The payload is: shape line (one paragraph) + blank line + a single pipe-table.
+      // Render shape line in the top div; the table in the body div.
+      const lines = (md || "").split("\n");
+      let i = 0;
+      while (i < lines.length && !lines[i].trim().startsWith("|")) i++;
+      const preamble = lines.slice(0, i).filter((l) => l.trim()).join(" ");
+      const tableLines = lines.slice(i).filter((l) => l.trim().startsWith("|"));
+      document.getElementById("shape").textContent = preamble || "";
+      const parsed = parsePipeTable(tableLines);
+      const body = document.getElementById("body");
+      if (!parsed) {
+        body.innerHTML = `<pre>${escapeHtml(md)}</pre>`;
+        return;
+      }
+      body.innerHTML = renderTable(parsed.headers, parsed.rows);
+    }
+
+    const app = new App({ name: "osaa-metrics-core-summary", version: "0.1.0" });
+
+    // Tool errors arrive as {isError:true} payloads — surface the server's
+    // text rather than leaving the "waiting for build_core_summary…"
+    // placeholder up. parseToolResult returns null on isError (the error
+    // text isn't JSON-parseable), so detect via the raw result first.
+    app.ontoolresult = (params) => {
+      const r = params?.result ?? params;
+      if (r?.isError) {
+        const text = r.content?.[0]?.text ?? "build_core_summary returned an error";
+        document.getElementById("shape").textContent = "";
+        document.getElementById("body").innerHTML =
+          `<div class="err">${escapeHtml(text)}</div>`;
+        return;
+      }
+      try {
+        const data = parseToolResult(r);
+        if (data && typeof data.markdown === "string") {
+          renderMarkdown(data.markdown);
+        }
+      } catch (e) {
+        document.getElementById("body").innerHTML =
+          `<div class="err">render failed: ${escapeHtml(e.message)}</div>`;
+      }
+    };
+
+    (async () => {
+      try { await app.connect(); }
+      catch (e) {
+        document.getElementById("body").innerHTML =
+          `<div class="err">connect failed: ${escapeHtml(e.message)}</div>`;
+      }
+    })();
+  </script>
+</body>
+</html>

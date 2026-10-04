@@ -1,0 +1,109 @@
+[project]
+name = "osaa-metrics"
+version = "0.1.0"
+description = "Chat-native pair-analyst over osaa-pipeline's official statistics. A self-service analytics workflow built on MCP servers and a BSL semantic layer."
+readme = "README.md"
+authors = [{ name = "Mirian Lima" }]
+maintainers = [{ name = "Mirian Lima" }]
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
+requires-python = ">=3.13"
+dependencies = [
+    "duckdb>=1.1.3",
+    "ibis-framework[duckdb]>=12.0",
+    "polars>=1.0",
+    "pyarrow>=21",
+    "pyyaml>=6.0",
+    "boring-semantic-layer>=0.3.16,<0.4",
+    "jsonschema>=4.20",
+    "altair>=6.1",
+]
+
+[project.optional-dependencies]
+encoder  = ["sentence-transformers>=3.0", "torch>=2.13.0", "huggingface-hub>=1.27.0"]
+mcp      = ["fastmcp>=3.2,<4", "starlette>=1.6", "pydantic>=2.13.4"]
+app      = ["marimo>=0.23"]
+dev      = ["pytest>=9.0", "pytest-asyncio>=1.3", "ruff>=0.16", "numpy>=1.26", "marimo>=0.23"]
+
+[project.scripts]
+osaa-mcp      = "osaa_metrics.mcp:main"
+osaa-mcp-http = "osaa_metrics.mcp:run_http"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/osaa_metrics"]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux'" }]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+markers = [
+    "needs_data: requires the local parquet mirror the test profile points at",
+]
+
+[tool.ruff]
+# Every Python file is linted and formatted under the same rules, with
+# per-file relaxations below for the shapes some files cannot avoid. Markdown
+# is excluded: ruff would otherwise reformat the code blocks inside design
+# notes and skill instructions, which are prose, not code.
+extend-exclude = ["*.md"]
+
+[tool.ruff.lint]
+# Pinned explicitly so a ruff version bump cannot silently widen the enforced
+# rule set. Each family or code is here because it guards a defect class this
+# codebase has actually shipped, or costs nothing today and guards the same
+# class from now on.
+select = [
+    # baseline
+    "E4", "E7", "E9", "F", "W",
+    # imports and syntax
+    "I", "UP",
+    # bugbear: raise-from, blind asserts, mutable defaults, zip strict
+    "B",
+    # exceptions: blind except, except-pass, vanilla raise, verbose re-raise
+    "BLE", "S110", "S112", "TRY002", "TRY201",
+    # untrusted strings into code or SQL
+    "S102", "S104", "S105", "S307", "S506", "S608",
+    # private member access
+    "SLF",
+    # naive datetimes
+    "DTZ",
+    # pytest: raises too broad, raises with multiple statements
+    "PT011", "PT012",
+    # subprocess.run without check
+    "PLW1510",
+    # dev-tracking markers and commented-out code
+    "FIX", "ERA",
+    # print
+    "T20",
+    # ruff-specific: stale noqa, mutable class defaults
+    "RUF",
+    # zero-cost guards
+    "C4", "PIE", "RET", "RSE", "TID", "PERF", "PGH", "LOG", "G", "A", "ICN",
+    "YTT", "ASYNC", "EXE", "PLE", "FLY", "FURB", "ISC002",
+]
+ignore = [
+    # Ambiguous-unicode rules flag the en dashes and multiplication signs in
+    # prose labels; those are deliberate typography, not confusables.
+    "RUF001", "RUF002", "RUF003",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests assert, poke private state on purpose, bind 0.0.0.0 to test the
+# setting, and carry fixture signatures with unused parameters.
+"tests/**" = ["S101", "SLF001", "S104", "ARG"]
+# Skill scripts are CLIs whose output is print; os.path is fine there.
+"skills/**" = ["T201", "PTH"]
+# Marimo notebooks end cells with a bare expression and carry long markdown.
+"examples/**" = ["B018", "PLR1711", "E501", "N"]
+"app/**" = ["B018", "PLR1711", "E501", "N"]

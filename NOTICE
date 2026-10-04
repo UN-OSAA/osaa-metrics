@@ -1,0 +1,30 @@
+osaa-metrics
+Copyright (c) 2026 United Nations
+
+Developed by the Office of the Special Adviser on Africa (OSAA).
+
+Licensed under the Apache License, Version 2.0. You may obtain a copy of the
+License in the LICENSE file distributed with this work, or at:
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Trademarks and names
+--------------------
+Section 6 of the License grants no trademark rights. The name "United Nations",
+the names of its offices including the Office of the Special Adviser on Africa,
+and the United Nations emblem are not licensed under the Apache License and may
+not be used in a way that states or implies that the United Nations endorses a
+derivative work, a product, or a service.
+
+Third-party data
+----------------
+This software reads statistical indicators published by third parties, including
+the World Bank and UNESCO. That data is not part of this work, is not covered by
+the Apache License, and remains subject to the terms of whoever published it.
+Anyone redistributing this software or its outputs is responsible for complying
+with those terms.
+
+Third-party software
+--------------------
+This software depends on separately licensed open-source packages, each carrying
+its own license and copyright. Their terms are unaffected by this NOTICE.

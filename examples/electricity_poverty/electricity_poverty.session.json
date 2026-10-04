@@ -1,0 +1,231 @@
+{
+  "schema_version": "1",
+  "generated_at": "2026-09-28T18:13:57+00:00",
+  "schema": [
+    {
+      "code": "EG.ELC.ACCS.ZS",
+      "description": "Access to electricity (% of population)",
+      "var_name": "electricity_access"
+    },
+    {
+      "code": "EG.ELC.ACCS.RU.ZS",
+      "description": "Access to electricity, rural (% of rural population)",
+      "var_name": "electricity_access_rural"
+    },
+    {
+      "code": "EG.ELC.ACCS.UR.ZS",
+      "description": "Access to electricity, urban (% of urban population)",
+      "var_name": "electricity_access_urban"
+    },
+    {
+      "code": "SI.POV.DDAY",
+      "description": "Poverty headcount ratio at the international poverty line (% of population)",
+      "var_name": "poverty_headcount"
+    },
+    {
+      "code": "NY.GDP.PCAP.PP.KD",
+      "description": "GDP per capita, PPP (constant 2021 international $)",
+      "var_name": "gdp_per_capita_ppp"
+    },
+    {
+      "code": "SE.PRM.ENRR",
+      "description": "School enrollment, primary (% gross)",
+      "var_name": "primary_enrolment"
+    },
+    {
+      "code": "SP.RUR.TOTL.ZS",
+      "description": "Rural population (% of total population)",
+      "var_name": "rural_population"
+    }
+  ],
+  "yaml": "electricity_poverty:\n  table: core_tbl\n  description: Electricity access, poverty and income, by country and year.\n  dimensions:\n    year:\n      expr: _.year\n      description: Year\n    country:\n      expr: _.country\n      description: Country\n    iso3:\n      expr: _.iso3\n      description: ISO3 code\n    region:\n      expr: _.region\n      description: Region\n    subregion:\n      expr: _.subregion\n      description: Subregion\n    income_group:\n      expr: _.income_group\n      description: World Bank income group\n  measures:\n    avg_electricity_access:\n      expr: \"_.electricity_access.mean()\"\n      description: Access to electricity (% of population)\n    avg_electricity_access_rural:\n      expr: \"_.electricity_access_rural.mean()\"\n      description: Access to electricity, rural (% of rural population)\n    avg_electricity_access_urban:\n      expr: \"_.electricity_access_urban.mean()\"\n      description: Access to electricity, urban (% of urban population)\n    avg_poverty_headcount:\n      expr: \"_.poverty_headcount.mean()\"\n      description: Poverty headcount ratio at the international poverty line (% of population)\n    avg_gdp_per_capita_ppp:\n      expr: \"_.gdp_per_capita_ppp.mean()\"\n      description: GDP per capita, PPP (constant 2021 international $)\n    avg_primary_enrolment:\n      expr: \"_.primary_enrolment.mean()\"\n      description: School enrollment, primary (% gross)\n    avg_rural_population:\n      expr: \"_.rural_population.mean()\"\n      description: Rural population (% of total population)\n",
+  "queries": [
+    {
+      "id": "q-001",
+      "label": "Richer, more connected, less poor",
+      "created_at": "2026-09-28T18:13:57+00:00",
+      "query_args": {
+        "dimensions": [
+          "income_group"
+        ],
+        "measures": [
+          "avg_electricity_access",
+          "avg_poverty_headcount"
+        ],
+        "filters": [
+          {
+            "field": "income_group",
+            "operator": "!=",
+            "value": "Unclassified"
+          }
+        ],
+        "order_by": null,
+        "limit": null
+      },
+      "chart_spec": {
+        "title": "Electricity access and extreme poverty by income group, 2000-2023",
+        "mark": {
+          "type": "bar"
+        },
+        "transform": [
+          {
+            "fold": [
+              "avg_electricity_access",
+              "avg_poverty_headcount"
+            ],
+            "as": [
+              "series",
+              "value"
+            ]
+          }
+        ],
+        "encoding": {
+          "x": {
+            "field": "income_group",
+            "type": "nominal",
+            "title": "Income group",
+            "sort": null
+          },
+          "xOffset": {
+            "field": "series",
+            "type": "nominal"
+          },
+          "y": {
+            "field": "value",
+            "type": "quantitative",
+            "title": "% of population"
+          },
+          "color": {
+            "field": "series",
+            "type": "nominal",
+            "title": "Series"
+          }
+        }
+      },
+      "sql": "SELECT\n  *\nFROM (\n  SELECT\n    \"t1\".\"income_group\",\n    AVG(\"t1\".\"electricity_access\") AS \"avg_electricity_access\",\n    AVG(\"t1\".\"poverty_headcount\") AS \"avg_poverty_headcount\"\n  FROM (\n    SELECT\n      *\n    FROM \"core\" AS \"t0\"\n    WHERE\n      \"t0\".\"income_group\" <> 'Unclassified'\n  ) AS \"t1\"\n  GROUP BY\n    1\n) AS \"t2\""
+    },
+    {
+      "id": "q-002",
+      "label": "Low-income countries over time",
+      "created_at": "2026-09-28T18:13:57+00:00",
+      "query_args": {
+        "dimensions": [
+          "year"
+        ],
+        "measures": [
+          "avg_electricity_access",
+          "avg_poverty_headcount"
+        ],
+        "filters": [
+          {
+            "field": "income_group",
+            "operator": "=",
+            "value": "Low income"
+          }
+        ],
+        "order_by": [
+          [
+            "year",
+            "asc"
+          ]
+        ],
+        "limit": null
+      },
+      "chart_spec": {
+        "title": "Low-income countries - electricity access and extreme poverty",
+        "mark": {
+          "type": "line",
+          "point": true
+        },
+        "transform": [
+          {
+            "fold": [
+              "avg_electricity_access",
+              "avg_poverty_headcount"
+            ],
+            "as": [
+              "series",
+              "value"
+            ]
+          }
+        ],
+        "encoding": {
+          "x": {
+            "field": "year",
+            "type": "ordinal",
+            "title": "Year"
+          },
+          "y": {
+            "field": "value",
+            "type": "quantitative",
+            "title": "% of population"
+          },
+          "color": {
+            "field": "series",
+            "type": "nominal",
+            "title": "Series"
+          }
+        }
+      },
+      "sql": "SELECT\n  *\nFROM (\n  SELECT\n    \"t1\".\"year\",\n    AVG(\"t1\".\"electricity_access\") AS \"avg_electricity_access\",\n    AVG(\"t1\".\"poverty_headcount\") AS \"avg_poverty_headcount\"\n  FROM (\n    SELECT\n      *\n    FROM \"core\" AS \"t0\"\n    WHERE\n      \"t0\".\"income_group\" = 'Low income'\n  ) AS \"t1\"\n  GROUP BY\n    1\n) AS \"t2\"\nORDER BY\n  \"t2\".\"year\" ASC"
+    },
+    {
+      "id": "q-003",
+      "label": "The rural gap",
+      "created_at": "2026-09-28T18:13:57+00:00",
+      "query_args": {
+        "dimensions": [
+          "region"
+        ],
+        "measures": [
+          "avg_electricity_access_rural",
+          "avg_electricity_access_urban"
+        ],
+        "filters": null,
+        "order_by": null,
+        "limit": null
+      },
+      "chart_spec": {
+        "title": "Rural and urban access to electricity by region, 2000-2023",
+        "mark": {
+          "type": "bar"
+        },
+        "transform": [
+          {
+            "fold": [
+              "avg_electricity_access_rural",
+              "avg_electricity_access_urban"
+            ],
+            "as": [
+              "series",
+              "value"
+            ]
+          }
+        ],
+        "encoding": {
+          "x": {
+            "field": "region",
+            "type": "nominal",
+            "title": "Region",
+            "sort": null
+          },
+          "xOffset": {
+            "field": "series",
+            "type": "nominal"
+          },
+          "y": {
+            "field": "value",
+            "type": "quantitative",
+            "title": "% with access"
+          },
+          "color": {
+            "field": "series",
+            "type": "nominal",
+            "title": "Series"
+          }
+        }
+      },
+      "sql": "SELECT\n  *\nFROM (\n  SELECT\n    \"t1\".\"region\",\n    AVG(\"t1\".\"electricity_access_rural\") AS \"avg_electricity_access_rural\",\n    AVG(\"t1\".\"electricity_access_urban\") AS \"avg_electricity_access_urban\"\n  FROM (\n    SELECT\n      *\n    FROM \"core\" AS \"t0\"\n  ) AS \"t1\"\n  GROUP BY\n    1\n) AS \"t2\""
+    }
+  ]
+}

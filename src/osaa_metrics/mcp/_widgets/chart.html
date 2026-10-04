@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>osaa-metrics · Chart</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; padding: 16px; }
+    .tabs { display: flex; gap: 0; border-bottom: 1px solid #ccc; margin-bottom: 12px; }
+    .tab {
+      padding: 6px 14px; cursor: pointer;
+      border: 1px solid transparent; border-bottom: none;
+      font-size: 13px;
+    }
+    .tab.active {
+      background: #fff; border-color: #ccc; border-bottom-color: #fff;
+      margin-bottom: -1px; font-weight: 600;
+    }
+    .pane { display: none; }
+    .pane.active { display: block; }
+    pre {
+      background: #f7f7f7; padding: 12px; border-radius: 6px;
+      overflow-x: auto; font-size: 12px;
+      font-family: ui-monospace, monospace;
+    }
+    #vega-pane { min-height: 380px; }
+    #log {
+      font-family: ui-monospace, monospace; font-size: 12px;
+      color: #555; min-height: 1.4em; margin-top: 8px;
+    }
+    .err { color: #c00; }
+    .empty { color: #888; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="tabs">
+    <div class="tab active" data-pane="chart">Chart</div>
+    <div class="tab" data-pane="query">Query</div>
+    <div class="tab" data-pane="sql">SQL</div>
+    <div class="tab" data-pane="chartspec">Chart Spec</div>
+  </div>
+  <div id="chart" class="pane active">
+    <div id="vega-pane"><div class="empty">waiting for query_and_chart…</div></div>
+  </div>
+  <div id="query" class="pane"><pre id="query-pre" class="empty">waiting for query_and_chart…</pre></div>
+  <div id="sql" class="pane"><pre id="sql-pre" class="empty">waiting for query_and_chart…</pre></div>
+  <div id="chartspec" class="pane"><pre id="chartspec-pre" class="empty">waiting for query_and_chart…</pre></div>
+  <div id="log"></div>
+
+  <script type="module">
+    import { App } from "https://unpkg.com/@modelcontextprotocol/ext-apps@1.7.1/app-with-deps";
+    import vegaEmbed from "https://cdn.jsdelivr.net/npm/vega-embed@6/+esm";
+    import { parseToolResult } from "./shared.js";
+
+    const log = (msg, cls = "") => {
+      const div = document.createElement("div");
+      if (cls) div.className = cls;
+      div.textContent = msg;
+      document.getElementById("log").appendChild(div);
+    };
+
+    const app = new App({ name: "osaa-metrics-chart", version: "0.1.0" });
+
+    function showVegaError(text) {
+      const pane = document.getElementById("vega-pane");
+      const div = document.createElement("div");
+      div.className = "err";
+      div.textContent = text;
+      pane.replaceChildren(div);
+    }
+
+    function render(p) {
+      // bsl_recipe_repr is always populated — the operator graph trace is
+      // the canonical record of what was queried.
+      document.getElementById("query-pre").textContent =
+        p.bsl_recipe_repr || "(no recipe)";
+      document.getElementById("query-pre").classList.remove("empty");
+
+      document.getElementById("sql-pre").textContent = p.pure_sql || "(no sql)";
+      document.getElementById("sql-pre").classList.remove("empty");
+      document.getElementById("chartspec-pre").textContent =
+        p.vega_lite_spec ? JSON.stringify(p.vega_lite_spec, null, 2) : "(no spec)";
+      document.getElementById("chartspec-pre").classList.remove("empty");
+
+      if (!p.vega_lite_spec) {
+        showVegaError("No vega-lite spec in payload");
+        return;
+      }
+      vegaEmbed("#vega-pane", p.vega_lite_spec, { actions: false })
+        .catch((e) => log("vega-embed failed: " + e.message, "err"));
+    }
+
+    // FastMCP delivers tool results via the ontoolresult notification. Read
+    // structuredContent first; fall back to JSON in content[0].text. Tool
+    // errors arrive as {isError:true} payloads — surface the server's text
+    // in the vega pane rather than leaving the "waiting…" placeholder up.
+    app.ontoolresult = (params) => {
+      const r = params?.result ?? params;
+      if (r?.isError) {
+        const text = r.content?.[0]?.text ?? "query_and_chart returned an error";
+        showVegaError(text);
+        return;
+      }
+      try {
+        const data = parseToolResult(r);
+        // Every query_and_chart payload carries bsl_recipe_repr — that's the render signal.
+        if (!data || typeof data !== "object" || !("bsl_recipe_repr" in data)) {
+          return;
+        }
+        render(data);
+        log("rendered chart");
+      } catch (e) {
+        log("ontoolresult parse failed: " + e.message, "err");
+      }
+    };
+
+    // Tab switching.
+    document.querySelectorAll(".tab").forEach((t) => {
+      t.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach((x) => x.classList.remove("active"));
+        document.querySelectorAll(".pane").forEach((x) => x.classList.remove("active"));
+        t.classList.add("active");
+        document.getElementById(t.dataset.pane).classList.add("active");
+      });
+    });
+
+    (async () => {
+      try {
+        await app.connect();
+        log("connected — waiting for tool result");
+      } catch (e) {
+        log("connect failed: " + e.message, "err");
+      }
+    })();
+  </script>
+</body>
+</html>

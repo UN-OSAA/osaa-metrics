@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>osaa-metrics · Discovery</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; padding: 12px; }
+    h2 { margin: 0 0 4px; font-size: 15px; }
+    .sub { color: #666; font-size: 12px; margin-bottom: 10px; }
+    .filters { display: grid; grid-template-columns: 72px 1fr 24px; gap: 4px 8px; align-items: center; margin-bottom: 4px; }
+    .filters label { font-size: 12px; color: #444; }
+    .filters input[type="text"] { padding: 4px 7px; font-size: 13px; width: 100%; box-sizing: border-box; }
+    .filters input.busy { border-bottom: 2px solid #1e3a8a; }
+    .filters .clear { font-size: 14px; background: none; border: none; color: #888; cursor: pointer; padding: 0; }
+    .filters .clear:hover { color: #c00; }
+    .status-bar { display: flex; align-items: center; justify-content: space-between; margin: 4px 0 6px; }
+    .page-size { font-size: 12px; color: #444; }
+    .page-size select { padding: 1px 4px; font-size: 12px; margin: 0 2px; }
+    .top-scroll { overflow-y: auto; border: 1px solid #eee; }
+    .top-scroll thead th { position: sticky; top: 0; z-index: 1; }
+    .status { font-size: 12px; min-height: 1.4em; margin: 4px 0 8px; }
+    .status.running { color: #1e3a8a; }
+    .status.ok { color: #155724; }
+    .status.empty { color: #888; }
+    .status.err { color: #c00; }
+    .status.warn { color: #b07000; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner { display: inline-block; width: 10px; height: 10px; border: 2px solid #1e3a8a;
+               border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite;
+               vertical-align: -1px; margin-right: 4px; }
+    table { border-collapse: collapse; width: 100%; font-size: 12px; table-layout: fixed; }
+    th, td { text-align: left; padding: 4px 6px; border-bottom: 1px solid #eee; vertical-align: top;
+             overflow: hidden; text-overflow: ellipsis; }
+    th { background: #f7f7f7; cursor: pointer; user-select: none; white-space: nowrap; font-weight: 600; }
+    th .chev { color: #1e3a8a; margin-left: 2px; }
+    tr.selected { background: #eef5ff; }
+    code.code { font-family: ui-monospace, monospace; font-size: 11px; }
+    .num { font-variant-numeric: tabular-nums; text-align: right; }
+
+    /* TOP table column widths — name shrinks to give the rest room. */
+    #top-tbl col.c-check  { width: 28px; }
+    #top-tbl col.c-code   { width: 130px; }
+    #top-tbl col.c-name   { width: auto; }
+    #top-tbl col.c-src    { width: 56px; }
+    #top-tbl col.c-db     { width: 64px; }
+    #top-tbl col.c-score  { width: 50px; }
+    #top-tbl col.c-yrs    { width: 78px; }
+    #top-tbl col.c-world  { width: 56px; }
+    #top-tbl col.c-africa { width: 56px; }
+    #top-tbl td.cell-name { white-space: normal; }
+
+    /* BOTTOM table — var_name needs room. Name column is the flexible one. */
+    #bot-tbl col.c-code    { width: 130px; }
+    #bot-tbl col.c-name    { width: auto; }
+    #bot-tbl col.c-src     { width: 56px; }
+    #bot-tbl col.c-db      { width: 64px; }
+    #bot-tbl col.c-varname { width: 280px; }
+    #bot-tbl col.c-x       { width: 28px; }
+    #bot-tbl td.cell-name  { white-space: normal; }
+    #bot-tbl td.cell-varname { padding: 2px 4px; }
+    input.var-name { padding: 4px 7px; font-family: ui-monospace, monospace; font-size: 12px;
+                     width: 100%; box-sizing: border-box; }
+    input.var-name:focus { outline: 2px solid #1e3a8a; outline-offset: -1px; background: #f6faff; }
+    input.var-name.invalid { border-color: #c00; background: #fff0f0; }
+
+    .section-title { font-size: 13px; font-weight: 600; margin: 14px 0 4px; }
+    .actions { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+    .actions button { padding: 6px 14px; border-radius: 6px; border: 1px solid #333; background: #fff; cursor: pointer; font-size: 13px; }
+    .actions button.primary { background: #1e3a8a; color: #fff; border-color: #1e3a8a; }
+    .actions button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .save-status { font-size: 12px; }
+    .save-status.ok { color: #155724; }
+    .save-status.warn { color: #b07000; }
+    .save-status.err { color: #c00; }
+    .save-status.empty, .save-status.ready { color: #444; }
+    .row-x { background: none; border: none; color: #888; cursor: pointer; font-size: 13px; padding: 0 4px; }
+    .row-x:hover { color: #c00; }
+  </style>
+</head>
+<body>
+  <h2>Discovery — pick indicators for your <code>core-table</code></h2>
+  <div class="sub">Two filters, AND-composed. Both empty → empty table. Selected rows move to the working set below.</div>
+
+  <div class="filters">
+    <label for="q-semantic">Semantic</label>
+    <input type="text" id="q-semantic" placeholder="trade balance, gdp growth, …" />
+    <button class="clear" id="x-semantic" title="clear semantic filter">×</button>
+
+    <label for="q-keyword">Keyword</label>
+    <input type="text" id="q-keyword" placeholder="africa, education, …" />
+    <button class="clear" id="x-keyword" title="clear keyword filter">×</button>
+  </div>
+  <div class="status-bar">
+    <div class="status empty" id="search-status">∅ type a query, press Enter to search</div>
+    <label class="page-size">
+      Show
+      <select id="top-page-size">
+        <option value="10" selected>10</option>
+        <option value="20">20</option>
+        <option value="50">50</option>
+      </select>
+      rows
+    </label>
+  </div>
+
+  <div class="top-scroll" id="top-scroll">
+  <table id="top-tbl">
+    <colgroup>
+      <col class="c-check"><col class="c-code"><col class="c-name"><col class="c-src">
+      <col class="c-db"><col class="c-score"><col class="c-yrs"><col class="c-world"><col class="c-africa">
+    </colgroup>
+    <thead>
+      <tr>
+        <th>✓</th>
+        <th data-sort="indicator_code">code</th>
+        <th data-sort="meta_indicator_name">name</th>
+        <th data-sort="source">source</th>
+        <th data-sort="database">database</th>
+        <th data-sort="similarity_score">score</th>
+        <th data-sort="year_start">years</th>
+        <th data-sort="cover_world_pct">world</th>
+        <th data-sort="cover_region_africa">africa</th>
+      </tr>
+    </thead>
+    <tbody id="top-tbody"></tbody>
+  </table>
+  </div>
+
+  <div class="section-title">Working set — your core table schema</div>
+  <table id="bot-tbl">
+    <colgroup>
+      <col class="c-code"><col class="c-name"><col class="c-src">
+      <col class="c-db"><col class="c-varname"><col class="c-x">
+    </colgroup>
+    <thead>
+      <tr>
+        <th>code</th>
+        <th>name</th>
+        <th>source</th>
+        <th>database</th>
+        <th>var_name</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody id="bot-tbody"></tbody>
+  </table>
+
+  <div class="save-status empty" id="save-status">∅ no indicators selected</div>
+  <div class="actions">
+    <button id="btn-save" class="primary" disabled>Save</button>
+    <button id="btn-download" disabled>Download (.csv)</button>
+  </div>
+
+  <script type="module">
+    import { App } from "https://unpkg.com/@modelcontextprotocol/ext-apps@1.7.1/app-with-deps";
+    import { parseToolResult, parseToolResultOrThrow, escapeHtml, nowSlug, validateVarName, toCSV } from "./shared.js";
+
+    function slugify(name) {
+      const STOP = new Set(["a","an","the","of","in","on","at","and","or","to","for","with","by","as","is","are","be","from","that","this","per","all","total","other","not"]);
+      let s = (name || "").toLowerCase().replace(/%/g, " pct ").replace(/\$/g, " usd ");
+      s = s.replace(/[^a-z0-9]+/g, " ");
+      const words = s.split(/\s+/).filter((w) => w && !STOP.has(w));
+      return words.slice(0, 6).join("_") || "indicator";
+    }
+
+    const app = new App({ name: "osaa-metrics-discovery", version: "0.1.0" });
+
+    // --- state ---
+    let candidates = [];                                    // top table rows (current filter result)
+    let workingSet = new Map();                             // indicator_code → row+var_name
+    let sortKey = null;                                     // active sort column
+    let sortDir = -1;                                       // -1 = desc, 1 = asc
+    let lastSavedAt = null;                                 // ISO-8601 of last successful save
+    let dirtySinceSave = false;                             // bottom table edited since last save
+    let lastSaveNotice = null;                              // disclaimer to show alongside ✓ saved (e.g. model invalidated)
+    let saving = false;                                     // true while save round-trip is in flight
+    let topPageSize = 10;                                   // page-size dropdown value (10/20/50)
+
+    // --- DOM ---
+    const semBox = document.getElementById("q-semantic");
+    const kwBox = document.getElementById("q-keyword");
+    const searchStatus = document.getElementById("search-status");
+    const saveStatus = document.getElementById("save-status");
+    const btnSave = document.getElementById("btn-save");
+    const btnDownload = document.getElementById("btn-download");
+
+    function setSearchStatus(cls, html) {
+      searchStatus.className = `status ${cls}`;
+      searchStatus.innerHTML = html;
+    }
+    function setSaveStatus(cls, text) {
+      saveStatus.className = `save-status ${cls}`;
+      saveStatus.textContent = text;
+    }
+    function fmtSavedAt(iso) {
+      if (!iso) return "";
+      try { return new Date(iso).toTimeString().slice(0, 8); }
+      catch (e) { return iso; }
+    }
+
+    // --- top table render ---
+    function defaultSortKey() {
+      return semBox.value.trim() ? "similarity_score" : "cover_world_pct";
+    }
+    function renderTop() {
+      const sk = sortKey ?? defaultSortKey();
+      const sd = sortDir;
+      const sorted = [...candidates].sort((a, b) => {
+        const av = a[sk], bv = b[sk];
+        if (av == null && bv == null) return 0;
+        if (av == null) return 1;
+        if (bv == null) return -1;
+        if (typeof av === "number" && typeof bv === "number") return (av - bv) * sd;
+        return String(av).localeCompare(String(bv)) * sd;
+      });
+      const tbody = document.getElementById("top-tbody");
+      const rowHtml = sorted.map((r) => {
+        const checked = workingSet.has(r.indicator_code) ? "checked" : "";
+        const cls = workingSet.has(r.indicator_code) ? "selected" : "";
+        const sc = r.similarity_score == null ? "—" : r.similarity_score.toFixed(2);
+        const yrs = `${r.year_start ?? "?"}–${r.year_end ?? "?"}`;
+        const cw = r.cover_world_pct == null ? "" : r.cover_world_pct.toFixed(1) + "%";
+        const ca = r.cover_region_africa == null ? "" : r.cover_region_africa.toFixed(1) + "%";
+        return `<tr class="${cls}">
+          <td><input type="checkbox" data-code="${escapeHtml(r.indicator_code)}" ${checked}></td>
+          <td><code class="code">${escapeHtml(r.indicator_code)}</code></td>
+          <td class="cell-name">${escapeHtml(r.meta_indicator_name)}</td>
+          <td>${escapeHtml(r.source)}</td>
+          <td>${escapeHtml(r.database)}</td>
+          <td class="num">${sc}</td>
+          <td>${yrs}</td>
+          <td class="num">${cw}</td>
+          <td class="num">${ca}</td>
+        </tr>`;
+      }).join("");
+      tbody.innerHTML = rowHtml;
+      document.querySelectorAll("#top-tbl th[data-sort]").forEach((th) => {
+        const k = th.dataset.sort;
+        const arrow = (k === sk) ? `<span class="chev">${sd < 0 ? "▾" : "▴"}</span>` : "";
+        th.innerHTML = th.textContent.replace(/[▾▴]\s*$/, "").trim() + arrow;
+      });
+      sizeTopScroll();
+    }
+
+    // Size the scroll container so its viewport fits exactly `topPageSize` rows.
+    // All candidates remain rendered; overflow scrolls. When candidates <= page
+    // size, the natural content height is below the cap and no scrollbar appears.
+    function sizeTopScroll() {
+      const scroll = document.getElementById("top-scroll");
+      const thead = scroll.querySelector("thead");
+      const firstRow = scroll.querySelector("tbody tr");
+      if (!firstRow) {
+        scroll.style.maxHeight = "";
+        return;
+      }
+      const headH = thead ? thead.getBoundingClientRect().height : 0;
+      const rowH = firstRow.getBoundingClientRect().height;
+      // +2px so a final row's bottom border isn't clipped against the scroll edge.
+      scroll.style.maxHeight = `${Math.ceil(headH + topPageSize * rowH + 2)}px`;
+    }
+
+    // --- bottom table render ---
+    function renderBottom() {
+      const tbody = document.getElementById("bot-tbody");
+      const rows = Array.from(workingSet.values());
+      const seenNames = new Map();
+      tbody.innerHTML = rows.map((r) => {
+        const err = validateVarName(r.var_name);
+        const dup = seenNames.has(r.var_name);
+        seenNames.set(r.var_name, true);
+        const cls = (err || dup) ? "invalid" : "";
+        return `<tr>
+          <td><code class="code">${escapeHtml(r.indicator_code)}</code></td>
+          <td class="cell-name">${escapeHtml(r.meta_indicator_name)}</td>
+          <td>${escapeHtml(r.source)}</td>
+          <td>${escapeHtml(r.database)}</td>
+          <td class="cell-varname"><input type="text" class="var-name ${cls}" data-code="${escapeHtml(r.indicator_code)}" value="${escapeHtml(r.var_name)}"></td>
+          <td><button class="row-x" data-code="${escapeHtml(r.indicator_code)}" title="remove">✕</button></td>
+        </tr>`;
+      }).join("");
+      updateSaveStatus();
+    }
+
+    function updateSaveStatus() {
+      const n = workingSet.size;
+      const rows = Array.from(workingSet.values());
+      const allValid = rows.every((r) => !validateVarName(r.var_name));
+      const names = rows.map((r) => r.var_name);
+      const allUnique = new Set(names).size === names.length;
+      const ready = n > 0 && allValid && allUnique;
+      btnSave.disabled = saving || !ready;
+      btnDownload.disabled = saving || !ready;
+      if (saving) {
+        setSaveStatus("running", `⟳ saving · ${n} indicator${n === 1 ? "" : "s"}…`);
+      } else if (n === 0) {
+        setSaveStatus("empty", "∅ no indicators selected");
+      } else if (!allValid) {
+        const bad = rows.filter((r) => validateVarName(r.var_name)).length;
+        setSaveStatus("err", `● ${n} indicators · ${bad} var_name${bad > 1 ? "s" : ""} invalid`);
+      } else if (!allUnique) {
+        setSaveStatus("err", `● ${n} indicators · duplicate var_names`);
+      } else if (lastSavedAt && !dirtySinceSave) {
+        const base = `✓ core table schema saved (${n} indicators) at ${fmtSavedAt(lastSavedAt)}`;
+        if (lastSaveNotice) {
+          setSaveStatus("warn", `${base} · ⚠ ${lastSaveNotice}`);
+        } else {
+          setSaveStatus("ok", base);
+        }
+      } else if (lastSavedAt && dirtySinceSave) {
+        setSaveStatus("warn", `⚠ ${n} indicators · edited since last save — re-save to update Claude`);
+      } else {
+        setSaveStatus("ready", `● ${n} indicators · ready to save`);
+      }
+    }
+
+    // --- hydration on tool result ---
+    function hydrateFromState(data) {
+      if (!data) return;
+      semBox.value = data.semantic_query ?? "";
+      kwBox.value = data.keyword_query ?? "";
+      lastSavedAt = data.last_saved_at ?? null;
+      dirtySinceSave = false;
+      workingSet = new Map();
+      for (const row of data.committed_core_table ?? []) {
+        const code = row.indicator_code ?? row.code;
+        if (!code) continue;
+        workingSet.set(code, {
+          indicator_code: code,
+          meta_indicator_name: row.meta_indicator_name ?? row.description ?? "",
+          source: row.source ?? "",
+          database: row.database ?? "",
+          var_name: row.var_name ?? "",
+          similarity_score: row.similarity_score ?? null,
+          year_start: row.year_start ?? null,
+          year_end: row.year_end ?? null,
+          cover_world_pct: row.cover_world_pct ?? null,
+          cover_region_africa: row.cover_region_africa ?? null,
+        });
+      }
+      renderBottom();
+      // If we had queries in state, kick off a search to repopulate the top table.
+      if (semBox.value.trim() || kwBox.value.trim()) {
+        search();
+      } else {
+        candidates = [];
+        renderTop();
+        setSearchStatus("empty", "∅ type a query, press Enter to search");
+      }
+    }
+
+    // --- search ---
+    let searchSeq = 0;
+    async function search() {
+      const sem = semBox.value.trim();
+      const kw = kwBox.value.trim();
+      const seq = ++searchSeq;
+      if (!sem && !kw) {
+        candidates = [];
+        renderTop();
+        setSearchStatus("empty", "∅ type a query, press Enter to search");
+        // Persist the empty queries server-side so reopen reflects this.
+        // Fire-and-forget: errors are logged but don't surface in the status
+        // bar — the user has no expectation tied to this call's success.
+        try { await app.callServerTool({
+          name: "discover_indicators",
+          arguments: { semantic_query: null, keyword_query: null, top_k: 50 },
+        }); } catch (e) {
+          console.warn("empty-query persistence failed:", e.message);
+        }
+        return;
+      }
+      semBox.classList.toggle("busy", !!sem);
+      kwBox.classList.toggle("busy", !!kw);
+      setSearchStatus("running", `<span class="spinner"></span> searching…`);
+      try {
+        const result = await app.callServerTool({
+          name: "discover_indicators",
+          arguments: {
+            semantic_query: sem || null,
+            keyword_query: kw || null,
+            top_k: 50,
+          },
+        });
+        if (seq !== searchSeq) return;  // stale response
+        const data = parseToolResultOrThrow(result);
+        candidates = (data && data.candidates) || [];
+        renderTop();
+        const note = data && data.note;
+        if (note) {
+          setSearchStatus(
+            "warn",
+            candidates.length === 0
+              ? `⚠ no keyword results · ${note}`
+              : `⚠ ${candidates.length} keyword results · ${note}`,
+          );
+        } else if (candidates.length === 0) {
+          setSearchStatus("empty", `∅ no indicators match`);
+        } else {
+          const mode = sem && kw ? "semantic ∩ keyword" : (sem ? "semantic" : "keyword");
+          setSearchStatus("ok", `✓ ${candidates.length} indicators (${mode})`);
+        }
+      } catch (e) {
+        setSearchStatus("err", `✗ search failed: ${escapeHtml(e.message)}`);
+      } finally {
+        semBox.classList.remove("busy");
+        kwBox.classList.remove("busy");
+      }
+    }
+    // --- handlers ---
+    function onEnter(box) {
+      box.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); search(); } });
+    }
+    onEnter(semBox);
+    onEnter(kwBox);
+    document.getElementById("x-semantic").addEventListener("click", () => { semBox.value = ""; sortKey = null; search(); });
+    document.getElementById("x-keyword").addEventListener("click", () => { kwBox.value = ""; search(); });
+
+    document.getElementById("top-page-size").addEventListener("change", (ev) => {
+      topPageSize = parseInt(ev.target.value, 10) || 10;
+      renderTop();
+    });
+
+    document.getElementById("top-tbl").addEventListener("click", (ev) => {
+      const th = ev.target.closest("th[data-sort]");
+      if (th) {
+        const k = th.dataset.sort;
+        if (k === sortKey) sortDir *= -1;
+        else { sortKey = k; sortDir = -1; }
+        renderTop();
+        return;
+      }
+      const cb = ev.target.closest("input[type=checkbox][data-code]");
+      if (cb) {
+        const code = cb.dataset.code;
+        if (cb.checked) {
+          const row = candidates.find((r) => r.indicator_code === code);
+          if (row && !workingSet.has(code)) {
+            workingSet.set(code, { ...row, var_name: slugify(row.meta_indicator_name) });
+            dirtySinceSave = true;
+          }
+        } else {
+          if (workingSet.delete(code)) dirtySinceSave = true;
+        }
+        renderTop();
+        renderBottom();
+      }
+    });
+
+    document.getElementById("bot-tbl").addEventListener("input", (ev) => {
+      const inp = ev.target.closest("input.var-name[data-code]");
+      if (!inp) return;
+      const r = workingSet.get(inp.dataset.code);
+      if (r) { r.var_name = inp.value; dirtySinceSave = true; renderBottom(); }
+    });
+    document.getElementById("bot-tbl").addEventListener("click", (ev) => {
+      const x = ev.target.closest(".row-x[data-code]");
+      if (!x) return;
+      if (workingSet.delete(x.dataset.code)) {
+        dirtySinceSave = true;
+        renderTop();
+        renderBottom();
+      }
+    });
+
+    // Save: persist the working set to session state (durable) first, then
+    // push it to agent context.
+    btnSave.addEventListener("click", async () => {
+      const wsRows = Array.from(workingSet.values());
+      const agentRows = wsRows.map((r) => ({
+        code: r.indicator_code,
+        description: r.meta_indicator_name,
+        var_name: r.var_name,
+      }));
+      // Flip to saving state BEFORE awaits so the round-trip lag (HF parquet
+      // fetch + pivot materialization) doesn't look like a dead click.
+      saving = true;
+      lastSaveNotice = null;
+      updateSaveStatus();
+      // save_core_schema runs first because it's the durable side of Save,
+      // and the agent-context push below must never run ahead of it: a
+      // completed push paired with a failed save would leave the agent
+      // believing a core table exists when the server never committed one.
+      // If save_core_schema fails, the rows are NOT persisted — never let
+      // the widget show "✓ saved" in that case. parseToolResultOrThrow turns
+      // {isError:true} results into a thrown Error so the catch block
+      // surfaces the server's text. The saved_at guard below covers the
+      // latent malformed-but-success case: a successful envelope whose body
+      // lacks the expected field shouldn't fall through to a faked timestamp.
+      let saveError = null;
+      try {
+        const result = await app.callServerTool({
+          name: "save_core_schema",
+          // agentRows, not wsRows: the raw working-set row names the label
+          // meta_indicator_name, which the server has no key for, so a Save of
+          // raw rows stores blank descriptions while Download (.csv) keeps them.
+          arguments: { working_set: agentRows },
+        });
+        const data = parseToolResultOrThrow(result);
+        if (typeof data?.saved_at !== "string") {
+          throw new Error("save_core_schema: malformed payload (no saved_at)");
+        }
+        lastSavedAt = data.saved_at;
+      } catch (e) {
+        saveError = e.message;
+      }
+      // The agent-context push only runs once the durable save has
+      // succeeded. It's the inline-awareness signal in production (Claude
+      // Desktop). In dev hosts (MCP Inspector) the host doesn't implement
+      // ui/update-model-context and this throws. Log and continue — the rows
+      // are already durable server-side, and the agent can re-discover via
+      // open_discovery() if the inline context wasn't refreshed.
+      let agentPushFailed = false;
+      if (!saveError) {
+        try {
+          await app.updateModelContext({
+            content: [{ type: "text", text: JSON.stringify({ core_table: agentRows }) }],
+          });
+        } catch (e) {
+          agentPushFailed = true;
+          console.warn("updateModelContext failed (rows are saved):", e.message);
+        }
+      }
+      saving = false;
+      if (saveError) {
+        setSaveStatus("err", `✗ save failed: ${saveError}`);
+        return;
+      }
+      dirtySinceSave = false;
+      if (agentPushFailed) {
+        const note = "agent context not refreshed (this host may not support agent push)";
+        lastSaveNotice = lastSaveNotice ? `${lastSaveNotice} · ${note}` : note;
+      }
+      updateSaveStatus();
+    });
+
+    btnDownload.addEventListener("click", async () => {
+      const rows = Array.from(workingSet.values()).map((r) => ({
+        code: r.indicator_code,
+        description: r.meta_indicator_name,
+        var_name: r.var_name,
+      }));
+      const filename = `core-table-schema-${nowSlug()}.csv`;
+      const csv = toCSV(rows, ["code", "description", "var_name"]);
+      // The MCP-app iframe sandbox blocks <a download> on blob URLs. Use the
+      // host-mediated download path: app.downloadFile shows a host confirmation
+      // dialog and writes the file via the host process.
+      try {
+        const result = await app.downloadFile({
+          contents: [{
+            type: "resource",
+            resource: {
+              uri: `file:///${filename}`,
+              mimeType: "text/csv",
+              text: csv,
+            },
+          }],
+        });
+        if (result?.isError) {
+          setSaveStatus("warn", `⚠ download cancelled by host`);
+        }
+      } catch (e) {
+        setSaveStatus("err", `✗ download failed: ${e.message}`);
+      }
+    });
+
+    // Hydrate from open_discovery's tool result.
+    app.ontoolresult = (params) => {
+      try {
+        const data = parseToolResult(params?.result ?? params);
+        if (data && ("committed_core_table" in data || "semantic_query" in data || "keyword_query" in data)) {
+          hydrateFromState(data);
+        }
+      } catch (e) {
+        setSearchStatus("err", `✗ hydrate failed: ${escapeHtml(e.message)}`);
+      }
+    };
+
+    (async () => {
+      try { await app.connect(); }
+      catch (e) { setSearchStatus("err", `✗ connect failed: ${escapeHtml(e.message)}`); }
+    })();
+  </script>
+</body>
+</html>

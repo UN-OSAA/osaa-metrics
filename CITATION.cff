@@ -1,0 +1,28 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "osaa-metrics"
+abstract: >-
+  A chat-native pair-analyst over official statistics. The library pairs a
+  long-format indicator table with a Boring Semantic Layer model so that an
+  analyst, working through a conversational agent, can assemble a working set
+  of indicators, pivot them into a wide core table, define a semantic model
+  over it, and compose queries and charts at runtime — rather than consuming a
+  fixed set of dashboards. It is delivered as a Python package with a Model
+  Context Protocol server.
+authors:
+  - given-names: "Mirian"
+    family-names: "Lima"
+    email: "mspencerlima@gmail.com"
+    orcid: "https://orcid.org/0009-0002-4866-006X"
+    affiliation: "United Nations Office of the Special Adviser on Africa"
+license: Apache-2.0
+version: "0.1.0"
+repository-code: "https://github.com/UN-OSAA/osaa-metrics"
+keywords:
+  - official statistics
+  - semantic layer
+  - model context protocol
+  - duckdb
+  - data analysis
+  - reproducible analytics
